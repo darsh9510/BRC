@@ -1,5 +1,6 @@
 import mmap
 import math
+import cProfile
 def main(input_file_name = "testcase.txt", output_file_name = "output.txt"):
     # with open(input_file_name, "r+") as input_file:
     #     mmapped_file = mmap.mmap(input_file.fileno(), 0, access=mmap.ACCESS_READ)
@@ -40,12 +41,11 @@ def main(input_file_name = "testcase.txt", output_file_name = "output.txt"):
                 parts = line.strip().split(b';')
                 city = parts[0].decode('utf-8')
                 temp = float(parts[1])
-                if city in order:
-                    idx = order[city]
-                    stats[idx][0] = min(stats[idx][0], temp)
-                    stats[idx][1] = max(stats[idx][1], temp)
-                    stats[idx][2] += temp
-                    stats[idx][3] += 1
+                idx = order[city]
+                stats[idx][0] = min(stats[idx][0], temp)
+                stats[idx][1] = max(stats[idx][1], temp)
+                stats[idx][2] += temp
+                stats[idx][3] += 1
     c=0
     output = []
     for i in stats:
@@ -80,4 +80,5 @@ def main(input_file_name = "testcase.txt", output_file_name = "output.txt"):
     #     output_file.write(f"{i}={j[0]}/{temp}/{j[1]}\n")
 
 if __name__ == "__main__":
-    main()
+    # main()
+    cProfile.run('main()')
