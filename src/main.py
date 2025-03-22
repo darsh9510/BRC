@@ -58,7 +58,7 @@ def main(input_file_name="testcase.txt", output_file_name="output.txt"):
         output.append(f"{city}={min_temp}/{avg_rounded}/{max_temp}\n")
 
     with open(output_file_name, "wb") as output_file:
-        buffered_writer = io.BufferedWriter(output_file, buffer_size=8192)
+        buffered_writer = io.BufferedWriter(output_file, buffer_size=1024*1024)
         for line in output:
             buffered_writer.write(line.encode('utf-8'))
         buffered_writer.flush()
