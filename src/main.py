@@ -1,40 +1,10 @@
-import os
+import mmap
 import math
-from concurrent.futures import ThreadPoolExecutor, as_completed
-
-def load_chunk(file_name, start, end, file_size):
-    with open(file_name, "rb") as f:
-        f.seek(start)
-        data = f.read(end - start)
-        if end < file_size:
-            data += f.readline()
-        if start != 0:
-            newline_index = data.find(b'\n')
-            if newline_index != -1:
-                data = data[newline_index+1:]
-    return data.decode("utf-8", errors="ignore").splitlines()
-
-def process_batch(lines, order, num_cities):
-    stats = [[1000, -1000, 0, 0] for _ in range(num_cities)]
-    for line in lines:
-        parts = line.rstrip("\r\n").split(";")
-        if len(parts) < 2:
-            continue
-        city = parts[0]
-        try:
-            temp = float(parts[1])
-        except ValueError:
-            continue
-        idx = order.get(city)
-        if idx is None:
-            continue
-        stats[idx][0] = min(stats[idx][0], temp)
-        stats[idx][1] = max(stats[idx][1], temp)
-        stats[idx][2] += temp
-        stats[idx][3] += 1
-    return stats
-
-def main(input_file_name="testcase.txt", output_file_name="output.txt"):
+def main(input_file_name = "testcase.txt", output_file_name = "output.txt"):
+    # with open(input_file_name, "r+") as input_file:
+    #     mmapped_file = mmap.mmap(input_file.fileno(), 0, access=mmap.ACCESS_READ)
+    #     lines = mmapped_file.readlines()
+    #     mmapped_file.close()
     cities = [
         "Adoni", "Agartala", "Agra", "Ahmedabad", "Aizawl", "Ajmer", "Akola", "Aligarh", "Allahabad", "Ambala",
         "Ambattur", "Amravati", "Amreli", "Amritsar", "Anand", "Arrah", "Asansol", "Aurangabad", "Bally", "Bangalore",
@@ -60,55 +30,54 @@ def main(input_file_name="testcase.txt", output_file_name="output.txt"):
         "Valsad", "Vapi", "Varanasi", "Vasai-Virar", "Vellore", "Vijayawada", "Visakhapatnam", "Warangal", "Wardha", "Yavatmal"
     ]
     order = {city: idx for idx, city in enumerate(cities)}
-    num_cities = len(cities)
-    
-    file_size = os.path.getsize(input_file_name)
-    chunk_size = int(1e6)
-    
-    boundaries = []
-    for start in range(0, file_size, chunk_size):
-        end = min(start + chunk_size, file_size)
-        boundaries.append((start, end))
-    
-    chunks_results = [None] * len(boundaries)
-    with ThreadPoolExecutor(max_workers=4) as executor:
-        futures = {executor.submit(load_chunk, input_file_name, start, end, file_size): i
-                   for i, (start, end) in enumerate(boundaries)}
-        for future in as_completed(futures):
-            idx = futures[future]
-            chunks_results[idx] = future.result()
-    
-    lines = []
-    for chunk in chunks_results:
-        lines.extend(chunk)
-    
-    batch_size = 100000
-    batches = [lines[i:i+batch_size] for i in range(0, len(lines), batch_size)]
-    
-    overall_stats = [[1000, -1000, 0, 0] for _ in range(num_cities)]
-    with ThreadPoolExecutor(max_workers=4) as executor:
-        futures = [executor.submit(process_batch, batch, order, num_cities) for batch in batches]
-        for future in as_completed(futures):
-            batch_stats = future.result()
-            for i in range(num_cities):
-                overall_stats[i][0] = min(overall_stats[i][0], batch_stats[i][0])
-                overall_stats[i][1] = max(overall_stats[i][1], batch_stats[i][1])
-                overall_stats[i][2] += batch_stats[i][2]
-                overall_stats[i][3] += batch_stats[i][3]
-    
+    stats = [[1000, -1000, 0, 0] for _ in range(len(cities))]
+    with open(input_file_name, "r+b") as input_file:
+        with mmap.mmap(input_file.fileno(), 0, access=mmap.ACCESS_READ) as mmapped_file:
+            while True:
+                line = mmapped_file.readline()
+                if not line:
+                    break
+                parts = line.strip().split(b';')
+                city = parts[0].decode('utf-8')
+                temp = float(parts[1])
+                if city in order:
+                    idx = order[city]
+                    stats[idx][0] = min(stats[idx][0], temp)
+                    stats[idx][1] = max(stats[idx][1], temp)
+                    stats[idx][2] += temp
+                    stats[idx][3] += 1
+    c=0
     output = []
-    for idx, city in enumerate(cities):
-        if overall_stats[idx][3] == 0:
-            output.append(f"{city}=NaN/NaN/NaN\n")
-        else:
-            min_temp = overall_stats[idx][0]
-            max_temp = overall_stats[idx][1]
-            avg_temp = overall_stats[idx][2] / overall_stats[idx][3]
-            avg_rounded = math.ceil(avg_temp * 10) / 10
-            output.append(f"{city}={min_temp}/{avg_rounded}/{max_temp}\n")
-    
-    with open(output_file_name, "w") as f:
-        f.writelines(output)
+    for i in stats:
+        mn = i[2]/i[3]
+        temp = mn*10
+        temp = math.ceil(temp)
+        temp/=10
+        output.append(f"{list(cities)[c]}={i[0]}/{temp}/{i[1]}\n")
+        c+=1
+    with open(output_file_name, "w") as output_file:
+        output_file.writelines(output)
+    # for i in range(c):
+    #     output_file.write(f"{list(cities)[i]}={c}/{len(cities)}/{len(order)}\n")
+    # for i in lines:
+    #     i[1]=round(float(i[1]),1)
+    #     if i[0] in cities:
+    #         val = cities[i[0]]
+    #         temp = (min(val[0],i[1]),max(val[1],i[1]),val[2]+i[1],val[3]+1)
+    #         cities[i[0]] = temp
+    #     else:
+    #         cities[i[0]] = (i[1],i[1],i[1],1)
+    # cities = dict(sorted(cities.items()))
+    # for i,j in cities.items():
+    #     mn = j[2]/j[3]
+    #     temp = mn*10
+    #     temp_int = int(temp)
+    #     rem = temp - float(temp_int)
+    #     if rem>0:
+    #         temp+=1
+    #     temp=int(temp)
+    #     temp/=10
+    #     output_file.write(f"{i}={j[0]}/{temp}/{j[1]}\n")
 
 if __name__ == "__main__":
     main()
