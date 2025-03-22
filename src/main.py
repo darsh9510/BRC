@@ -13,11 +13,8 @@ def main(input_file_name="testcase.txt", output_file_name="output.txt"):
                 parts = line.strip().split(b';')
                 if len(parts) < 2:
                     continue
-                try:
-                    city = parts[0].decode('utf-8')
-                    temp = float(parts[1])
-                except (ValueError, UnicodeDecodeError):
-                    continue
+                city = parts[0].decode('utf-8')
+                temp = float(parts[1])
                 if city in city_values:
                     city_values[city].append(temp)
                 else:
