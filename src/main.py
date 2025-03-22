@@ -48,7 +48,7 @@ def main(input_file_name="testcase.txt", output_file_name="output.txt"):
     output = []
     for city in sorted(city_values.keys()):
         values = city_values[city]
-        total = math.fsum(values)
+        total = sum(values)
         count = len(values)
         avg_temp = total / count
         avg_rounded = math.ceil(avg_temp * 10) / 10
