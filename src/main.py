@@ -1,6 +1,6 @@
 import mmap
 import math
-# import cProfile
+
 def main(input_file_name = "testcase.txt", output_file_name = "output.txt"):
     # with open(input_file_name, "r+") as input_file:
     #     mmapped_file = mmap.mmap(input_file.fileno(), 0, access=mmap.ACCESS_READ)
@@ -81,4 +81,3 @@ def main(input_file_name = "testcase.txt", output_file_name = "output.txt"):
 
 if __name__ == "__main__":
     main()
-    # cProfile.run('main()')
