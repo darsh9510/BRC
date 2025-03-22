@@ -1,6 +1,7 @@
 import mmap
 import math
 import cProfile
+import io
 def main(input_file_name="testcase.txt", output_file_name="output.txt"):
     cities = [
     "Adoni", "Agartala", "Agra", "Ahmedabad", "Aizawl", "Ajmer", "Akola", "Aligarh", "Allahabad", "Ambala",
@@ -48,7 +49,7 @@ def main(input_file_name="testcase.txt", output_file_name="output.txt"):
     output = []
     for city in sorted(city_values.keys()):
         values = city_values[city]
-        total = sum(values)
+        total = math.fsum(values)
         count = len(values)
         avg_temp = total / count
         avg_rounded = math.ceil(avg_temp * 10) / 10
@@ -56,8 +57,11 @@ def main(input_file_name="testcase.txt", output_file_name="output.txt"):
         max_temp = max(values)
         output.append(f"{city}={min_temp}/{avg_rounded}/{max_temp}\n")
 
-    with open(output_file_name, "w") as output_file:
-        output_file.writelines(output)
+    with open(output_file_name, "wb") as output_file:
+        buffered_writer = io.BufferedWriter(output_file, buffer_size=8192)
+        for line in output:
+            buffered_writer.write(line.encode('utf-8'))
+        buffered_writer.flush()
 
 if __name__ == "__main__":
     main()
