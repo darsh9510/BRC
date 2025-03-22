@@ -1,34 +1,10 @@
+import mmap
+import math
 def main(input_file_name = "testcase.txt", output_file_name = "output.txt"):
-    input_file = open(input_file_name, "r")
-    output_file = open(output_file_name, "w")
-
-    # first_line = input_file.readline().strip()
-    # first_line = first_line.split(";")
-
-    lines = input_file.readlines()
-    # cities = {}
-    # for i in lines:
-    #     i = i.split(";")
-    #     i[1]=round(float(i[1]),1)
-    #     if i[0] in cities:
-    #         val = cities[i[0]]
-    #         temp = (min(val[0],i[1]),max(val[1],i[1]),val[2]+i[1],val[3]+1)
-    #         cities[i[0]] = temp
-    #     else:
-    #         cities[i[0]] = (i[1],i[1],i[1],1)
-    # cities = dict(sorted(cities.items()))
-    # for i,j in cities.items():
-    #     mn = j[2]/j[3]
-    #     temp = mn*10
-    #     temp_int = int(temp)
-    #     rem = temp - float(temp_int)
-    #     if rem>0:
-    #         temp+=1
-    #     temp=int(temp)
-    #     temp/=10
-    #     output_file.write(f"{i}={j[0]}/{temp}/{j[1]}\n")
-    # lines = [line.split(";") for line in lines]
-    # cities = set()
+    with open(input_file_name, "r+") as input_file:
+        mmapped_file = mmap.mmap(input_file.fileno(), 0, access=mmap.ACCESS_READ)
+        lines = mmapped_file.read().decode('utf-8').splitlines()
+        mmapped_file.close()
     cities = [
         "Adoni", "Agartala", "Agra", "Ahmedabad", "Aizawl", "Ajmer", "Akola", "Aligarh", "Allahabad", "Ambala",
         "Ambattur", "Amravati", "Amreli", "Amritsar", "Anand", "Arrah", "Asansol", "Aurangabad", "Bally", "Bangalore",
@@ -53,46 +29,27 @@ def main(input_file_name = "testcase.txt", output_file_name = "output.txt"):
         "Tiruchirappalli", "Tirunelveli", "Tiruppur", "Tiruvannamalai", "Tumkur", "Udaipur", "Ujjain", "Ulhasnagar", "Vadodara",
         "Valsad", "Vapi", "Varanasi", "Vasai-Virar", "Vellore", "Vijayawada", "Visakhapatnam", "Warangal", "Wardha", "Yavatmal"
     ]
-    # for i in lines:
-    #     i = i.split(";")
-    #     cities.add(i[0])
-    # cities = sorted(cities)
-    order = {}
-    c=0
-    for i in cities:
-        order[i]=c
-        c+=1
-    stats = []
-    for i in range(len(order)):
-        temp = [1000,-1000,0,0]
-        stats.append(temp)
+    order = {city: idx for idx, city in enumerate(cities)}
+    stats = [[1000, -1000, 0, 0] for _ in range(len(cities))]
     for i in lines:
         i = i.split(";")
         i[1]=float(i[1])
-        # output_file.write(f"{i[0]}={i[1]}/{i[1]}/{i[1]}\n")
         idx = order[i[0]]
-        # if stats[idx][0]>i[1]:
-        #     stats[idx][0]=i[1]
-        # if stats[idx][1]<i[1]:
-        #     stats[idx][1]=i[1]
         stats[idx][0]=min(stats[idx][0],i[1])
         stats[idx][1]=max(stats[idx][1],i[1])
         stats[idx][2]+=i[1]
         stats[idx][3]+=1
-        # output_file.write(f"{i[0]}={i[1]}/{i[1]}/{i[1]}\n")
     c=0
-    for j in range(len(stats)):
-        i = stats[j]
+    output = []
+    for i in stats:
         mn = i[2]/i[3]
-        # mn = 135
         temp = mn*10
-        temp_int = int(temp)
-        rem = temp - float(temp_int)
-        if rem>0:
-            temp+=1
-        temp=int(temp)
+        temp = math.ceil(temp)
         temp/=10
-        output_file.write(f"{list(cities)[j]}={i[0]}/{temp}/{i[1]}\n")
+        output.append(f"{list(cities)[c]}={i[0]}/{temp}/{i[1]}\n")
+        c+=1
+    with open(output_file_name, "w") as output_file:
+        output_file.writelines(output)
     # for i in range(c):
     #     output_file.write(f"{list(cities)[i]}={c}/{len(cities)}/{len(order)}\n")
     # for i in lines:
@@ -114,9 +71,6 @@ def main(input_file_name = "testcase.txt", output_file_name = "output.txt"):
     #     temp=int(temp)
     #     temp/=10
     #     output_file.write(f"{i}={j[0]}/{temp}/{j[1]}\n")
-
-    output_file.close()
-    input_file.close()
 
 if __name__ == "__main__":
     main()
