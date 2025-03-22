@@ -30,16 +30,21 @@ def main(input_file_name="testcase.txt", output_file_name="output.txt"):
         city_values[city]=[]
     with open(input_file_name, "r+b") as input_file:
         with mmap.mmap(input_file.fileno(), 0, access=mmap.ACCESS_READ) as mmapped_file:
-            while True:
-                line = mmapped_file.readline()
-                if not line:
-                    break
-                parts = line.strip().split(b';')
-                if len(parts) < 2:
-                    continue
-                city = parts[0].decode('utf-8')
-                temp = float(parts[1])
-                city_values[city].append(temp)
+            data = mmapped_file.read()
+    lines = data.split(b'\n')
+    for line in lines:
+        if not line:
+            continue
+        before, sep, after = line.partition(b';')
+        if sep != b';':
+            continue
+        try:
+            city = before.decode('utf-8')
+            temp = float(after)
+        except (ValueError, UnicodeDecodeError):
+            continue
+        if city in city_values:
+            city_values[city].append(temp)
     output = []
     for city in sorted(city_values.keys()):
         values = city_values[city]
