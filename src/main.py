@@ -1,10 +1,9 @@
-import mmap
-import math
+import atexit, io, os, math
 def main(input_file_name = "testcase.txt", output_file_name = "output.txt"):
-    with open(input_file_name, "r+") as input_file:
-        mmapped_file = mmap.mmap(input_file.fileno(), 0, access=mmap.ACCESS_READ)
-        lines = mmapped_file.read().decode('utf-8').splitlines()
-        mmapped_file.close()
+    # with open(input_file_name, "r+") as input_file:
+    #     mmapped_file = mmap.mmap(input_file.fileno(), 0, access=mmap.ACCESS_READ)
+    #     lines = mmapped_file.readlines()
+    #     mmapped_file.close()
     cities = [
         "Adoni", "Agartala", "Agra", "Ahmedabad", "Aizawl", "Ajmer", "Akola", "Aligarh", "Allahabad", "Ambala",
         "Ambattur", "Amravati", "Amreli", "Amritsar", "Anand", "Arrah", "Asansol", "Aurangabad", "Bally", "Bangalore",
@@ -31,25 +30,59 @@ def main(input_file_name = "testcase.txt", output_file_name = "output.txt"):
     ]
     order = {city: idx for idx, city in enumerate(cities)}
     stats = [[1000, -1000, 0, 0] for _ in range(len(cities))]
-    for i in lines:
-        i = i.split(";")
-        i[1]=float(i[1])
-        idx = order[i[0]]
-        stats[idx][0]=min(stats[idx][0],i[1])
-        stats[idx][1]=max(stats[idx][1],i[1])
-        stats[idx][2]+=i[1]
-        stats[idx][3]+=1
-    c=0
+    with open(input_file_name, 'rb') as f:
+        data = f.read().split(b'\n')
+    for line in data:
+        parts = line.split(b';', 1)
+        if len(parts) != 2:
+            continue
+        city = parts[0].decode('utf-8')
+        temp = float(parts[1])
+        idx = order[city]
+        stats[idx][0] = min(stats[idx][0], temp)
+        stats[idx][1] = max(stats[idx][1], temp)
+        stats[idx][2] += temp
+        stats[idx][3] += 1
     output = []
-    for i in stats:
-        mn = i[2]/i[3]
-        temp = mn*10
-        temp = math.ceil(temp)
-        temp/=10
-        output.append(f"{list(cities)[c]}={i[0]}/{temp}/{i[1]}\n")
-        c+=1
-    with open(output_file_name, "w") as output_file:
-        output_file.writelines(output)
+    append = output.append
+    for idx, city in enumerate(cities):
+        if stats[idx][3] == 0:
+            append(f"{city}=NaN/NaN/NaN\n")
+            continue
+        min_temp = stats[idx][0]
+        max_temp = stats[idx][1]
+        avg_temp = stats[idx][2] / stats[idx][3]
+        avg_rounded = math.ceil(avg_temp * 10) / 10
+        append(f"{city}={min_temp}/{avg_rounded}/{max_temp}\n")
+    with open(output_file_name, 'w') as f:
+        f.writelines(output)
+
+    # with open(input_file_name, "r+b") as input_file:
+    #     with mmap.mmap(input_file.fileno(), 0, access=mmap.ACCESS_READ) as mmapped_file:
+    #         while True:
+    #             line = mmapped_file.readline()
+    #             if not line:
+    #                 break
+    #             parts = line.strip().split(b';')
+    #             city = parts[0].decode('utf-8')
+    #             temp = float(parts[1])
+    #             if city in order:
+    #                 idx = order[city]
+    #                 stats[idx][0] = min(stats[idx][0], temp)
+    #                 stats[idx][1] = max(stats[idx][1], temp)
+    #                 stats[idx][2] += temp
+    #                 stats[idx][3] += 1
+    # c=0
+    # output = []
+    # for i in stats:
+    #     mn = i[2]/i[3]
+    #     temp = mn*10
+    #     temp = math.ceil(temp)
+    #     temp/=10
+    #     output.append(f"{list(cities)[c]}={i[0]}/{temp}/{i[1]}\n")
+    #     c+=1
+    # with open(output_file_name, "w") as output_file:
+    #     output_file.writelines(output)
     # for i in range(c):
     #     output_file.write(f"{list(cities)[i]}={c}/{len(cities)}/{len(order)}\n")
     # for i in lines:
